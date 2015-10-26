@@ -4,6 +4,7 @@ import com.schibsted.spt.identity.spidjavaapiexplorer.controller.ServletControll
 import com.schibsted.spt.identity.spidjavaapiexplorer.exception.ServletControllerException;
 import no.spid.api.client.SpidApiClient;
 import no.spid.api.client.SpidApiResponse;
+import no.spid.api.connection.SpidHttp4ClientFactory;
 import no.spid.api.exceptions.SpidApiException;
 import no.spid.api.exceptions.SpidOAuthException;
 import no.spid.api.oauth.SpidOAuthToken;
@@ -53,8 +54,10 @@ public class APIExplorerServlet extends ServletController {
                     secret,
                     signatureSecret,
                     redirectUrl,
-                    spidBaseUrl
-            ).build();
+                    spidBaseUrl)
+                    .connectionClientFactory(new SpidHttp4ClientFactory())
+                    .build();
+
 
         } catch (IOException e) {
             log.error("No config file found. Please copy '/WEB-INF/config-dist.properties' to '/WEB-INF/config.properties' and fill out correct properties");
@@ -213,12 +216,7 @@ public class APIExplorerServlet extends ServletController {
         } catch (SpidApiException e) {
             response.getWriter().println(e.getResponseBody());
         } catch (SpidOAuthException e) {
-            /*
-             * TODO when changing to SpidApiClient 1.5 (not published yet) or higher this should be refactored
-             * 4XX responses (not including 400 and 401) are currently wrapped as SpidOAuthException without including the response data...
-             */
-            String jsonString = "{ exception : " + JSONObject.quote(e.getMessage()) + "}";
-
+            String jsonString = "{ exception: " + JSONObject.quote(e.getMessage()) + "}";
             response.getWriter().println(new JSONObject(jsonString));
         }
     }
